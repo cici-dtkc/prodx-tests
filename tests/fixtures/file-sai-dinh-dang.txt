@@ -1,0 +1,7 @@
+Sampling Procedure 
+Short Text	
+Sampling Type	
+Sample Size	
+Acceptance Number	
+Minimum Sample Size	
+Long Text
