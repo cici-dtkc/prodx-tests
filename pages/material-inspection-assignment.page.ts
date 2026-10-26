@@ -63,6 +63,12 @@ export class MaterialInspectionAssignmentPage {
   get dataRows(): Locator {
     return this.page.locator('tbody tr');
   }
+  get importButton(): Locator {
+    return this.page.getByRole('button', { name: 'Import', exact: true });
+  }
+  get exportButton(): Locator {
+    return this.page.getByRole('button', { name: 'Export', exact: true });
+  }
 
   rowOf(data: Pick<MaterialInspectionAssignmentData, 'inspectionType' | 'material'>): Locator {
     return this.dataRows
@@ -129,6 +135,43 @@ export class MaterialInspectionAssignmentPage {
     if (await this.rowOf(data).count() > 0) {
       await this.delete(data);
     }
+  }
+
+  async exportFile() {
+    const downloadPromise = this.page.waitForEvent('download');
+    await this.exportButton.click();
+    return downloadPromise;
+  }
+
+  async selectImportFile(filePath: string) {
+    const input = this.page.locator('input[type="file"]').first();
+    if (await input.count()) {
+      await input.setInputFiles(filePath);
+      return;
+    }
+
+    await this.importButton.click();
+    const dialogInput = this.page.locator('input[type="file"]').first();
+    await expect(dialogInput).toBeAttached();
+    await dialogInput.setInputFiles(filePath);
+  }
+
+  async confirmImport() {
+    const confirm = this.page.getByRole('dialog').or(this.page.getByRole('alertdialog'));
+    if (await confirm.count() && await confirm.first().isVisible()) {
+      const button = confirm.first().getByRole('button', { name: /import|upload|confirm|yes|xác nhận/i });
+      if (await button.isEnabled()) {
+        await button.click();
+      }
+    }
+    await this.page.waitForTimeout(500);
+  }
+
+  async downloadImportTemplate() {
+    await this.importButton.click();
+    const downloadPromise = this.page.waitForEvent('download');
+    await this.page.getByRole('button', { name: /Download template/i }).click();
+    return downloadPromise;
   }
 
   private actionOf(data: Pick<MaterialInspectionAssignmentData, 'inspectionType' | 'material'>, index: 0 | 1 | 2): Locator {
