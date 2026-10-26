@@ -74,13 +74,13 @@ export class InspectionSamplingPage {
     return this.dataRows.count();
   }
 
-  async xuatFile() {
+  async exportFile() {
     const downloadPromise = this.page.waitForEvent('download');
     await this.exportButton.click();
     return downloadPromise;
   }
 
-  async chonFileImport(filePath: string) {
+  async selectImportFile(filePath: string) {
     const input = this.page.locator('input[type="file"]').first();
     if (await input.count()) {
       await input.setInputFiles(filePath);
@@ -93,7 +93,7 @@ export class InspectionSamplingPage {
     await dialogInput.setInputFiles(filePath);
   }
 
-  async xacNhanImport() {
+  async confirmImport() {
     const confirm = this.page.getByRole('dialog').or(this.page.getByRole('alertdialog'));
     if (await confirm.count() && await confirm.first().isVisible()) {
       const button = confirm.first().getByRole('button', { name: /import|upload|confirm|yes|xác nhận/i });
@@ -104,7 +104,7 @@ export class InspectionSamplingPage {
     await this.page.waitForTimeout(500);
   }
 
-  async taiTemplateImport() {
+  async downloadImportTemplate() {
     await this.importButton.click();
     const downloadPromise = this.page.waitForEvent('download');
     await this.page.getByRole('button', { name: /Download template/i }).click();
@@ -147,7 +147,7 @@ export class InspectionSamplingPage {
   }
 
   //  Create  
-  async taoMoi(data: SamplingData) {
+  async create(data: SamplingData) {
     await this.createButton.click();
 
     // Bước 1: nhập mã Sampling Procedure
@@ -158,11 +158,11 @@ export class InspectionSamplingPage {
     // Bước 2: nhập các thông tin còn lại
     await expect(this.page.getByRole('heading', { name: /Step 2 of 2/ })).toBeVisible();
     await expect(this.page.getByLabel('Sampling Procedure')).toHaveValue(data.code); // mã được mang sang từ bước 1
-    await this.dienForm(data);
-    await this.luu();
+    await this.fillForm(data);
+    await this.save();
   }
 
-  async luu() {
+  async save() {
     await this.saveButton.click();
 
     const confirmation = this.page.getByRole('alertdialog').filter({ hasText: /Save changes/i });
@@ -180,12 +180,12 @@ export class InspectionSamplingPage {
     ).toBeTruthy();
   }
 
-  async dienForm(data: Partial<SamplingData>) {
+  async fillForm(data: Partial<SamplingData>) {
     if (data.shortText !== undefined) {
       await this.page.getByLabel('Short Text').fill(data.shortText);
     }
     if (data.type !== undefined) {
-      await this.chonSamplingType(data.type);
+      await this.selectSamplingType(data.type);
     }
     if (data.sampleSize !== undefined) {
       await this.page.getByLabel(/^Sample Size/).fill(data.sampleSize);
@@ -202,34 +202,34 @@ export class InspectionSamplingPage {
   }
 
 
-  private async chonSamplingType(type: SamplingType) {
+  private async selectSamplingType(type: SamplingType) {
     await this.page.getByRole('combobox', { name: /Sampling Type/ }).click();
     await this.page.getByRole('option', { name: type }).click();
   }
 
   //  Read 
-  async xemChiTiet(code: string) {
+  async viewDetails(code: string) {
     await this.actionOf(code, 0).click();
   }
 
   //  Update 
-  async moSua(code: string) {
+  async openEdit(code: string) {
     await this.actionOf(code, 1).click();
   }
 
   //  Delete 
-  async xoa(code: string) {
+  async delete(code: string) {
     await this.actionOf(code, 2).click();
     const dialog = this.page.getByRole('alertdialog').or(this.page.getByRole('dialog'));
     await dialog.getByRole('button', { name: /delete|confirm|yes|xóa|xác nhận/i }).click();
     await expect(this.rowOf(code)).toHaveCount(0);
   }
 // dọn dữ liệu test
-  async xoaNeuCo(code: string) {
+  async deleteIfExists(code: string) {
     try {
       await this.goto();
       if ((await this.rowOf(code).count()) > 0) {
-        await this.xoa(code);
+        await this.delete(code);
       }
     } catch (loi) {
       console.warn(`Không dọn được dữ liệu test ${code}:`, loi);

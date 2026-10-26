@@ -3,9 +3,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 import ExcelJS from 'exceljs';
 import { InspectionSamplingPage } from '../pages/inspection-sampling.page';
+import { IMPORT_SAMPLING_DATA } from './data/inspection-sampling.data';
 
 const FILE_SAI = path.join(process.cwd(), 'tests', 'fixtures', 'file-sai-dinh-dang.txt');
-const MA_IMPORT = 'ATIMP01';
 
 test.describe('Inspection Sampling - Export / Import', () => {
   let sampling: InspectionSamplingPage;
@@ -13,12 +13,12 @@ test.describe('Inspection Sampling - Export / Import', () => {
   test.beforeEach(async ({ page }) => {
     sampling = new InspectionSamplingPage(page);
     await sampling.goto();
-    await expect(sampling.cacDong.first()).toBeVisible(); // chờ bảng tải xong
+    await expect(sampling.cacDong.first()).toBeVisible();  
   });
 
   // EXPORT
   test('TC15 - Export: tải được file Excel/CSV, không rỗng', async ({}, testInfo) => {
-    const download = await sampling.xuatFile();
+    const download = await sampling.exportFile();
 
     const ten = download.suggestedFilename();
     expect(ten).toMatch(/\.(xlsx|xls|csv)$/i);
@@ -33,7 +33,7 @@ test.describe('Inspection Sampling - Export / Import', () => {
     const maDau = (await sampling.cacDong.first().getByRole('cell').nth(1).innerText()).trim();
     const tong = await sampling.cacDong.count();
 
-    const download = await sampling.xuatFile();
+    const download = await sampling.exportFile();
     const ten = download.suggestedFilename();
     const duongDan = testInfo.outputPath(ten);
     await download.saveAs(duongDan);
@@ -74,8 +74,8 @@ test.describe('Inspection Sampling - Export / Import', () => {
   test('TC18 - Import: file sai định dạng không tạo thêm dữ liệu', async () => {
     const truoc = await sampling.cacDong.count();
 
-    await sampling.chonFileImport(FILE_SAI);
-    await sampling.xacNhanImport();
+    await sampling.selectImportFile(FILE_SAI);
+    await sampling.confirmImport();
 
     // Tải lại trang 
     await sampling.goto();
@@ -84,7 +84,7 @@ test.describe('Inspection Sampling - Export / Import', () => {
   });
 
   test('TC19 - Import: file hợp lệ thì dữ liệu xuất hiện trong danh sách', async ({}, testInfo) => {
-    const templateDownload = await sampling.taiTemplateImport();
+    const templateDownload = await sampling.downloadImportTemplate();
     const templatePath = testInfo.outputPath('sampling-import-template.xlsx');
     await templateDownload.saveAs(templatePath);
 
@@ -95,21 +95,21 @@ test.describe('Inspection Sampling - Export / Import', () => {
     sheet.getRow(1).eachCell((cell, column) => columns.set(String(cell.value).trim(), column));
 
     const row = sheet.addRow(new Array(sheet.columnCount).fill(null));
-    row.getCell(columns.get('Sampling Procedure *')!).value = MA_IMPORT;
-    row.getCell(columns.get('Short Text')!).value = 'Imported by automated test';
-    row.getCell(columns.get('Sampling Type')!).value = 'FIXED';
-    row.getCell(columns.get('Sample Size')!).value = 5;
+    row.getCell(columns.get('Sampling Procedure *')!).value = IMPORT_SAMPLING_DATA.code;
+    row.getCell(columns.get('Short Text')!).value = IMPORT_SAMPLING_DATA.shortText;
+    row.getCell(columns.get('Sampling Type')!).value = IMPORT_SAMPLING_DATA.type;
+    row.getCell(columns.get('Sample Size')!).value = IMPORT_SAMPLING_DATA.sampleSize;
     const fileHopLe = testInfo.outputPath('sampling-import.xlsx');
     await workbook.xlsx.writeFile(fileHopLe);
 
     try {
-      await sampling.chonFileImport(fileHopLe);
-      await sampling.xacNhanImport();
+      await sampling.selectImportFile(fileHopLe);
+      await sampling.confirmImport();
 
       await sampling.goto();
-      await expect(sampling.rowOf(MA_IMPORT)).toBeVisible();
+      await expect(sampling.rowOf(IMPORT_SAMPLING_DATA.code)).toBeVisible();
     } finally {
-      await sampling.xoaNeuCo(MA_IMPORT); // dọn dữ liệu đã import
+      await sampling.deleteIfExists(IMPORT_SAMPLING_DATA.code); // dọn dữ liệu đã import
     }
   });
 });

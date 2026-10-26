@@ -1,16 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { InspectionSamplingPage, SamplingData } from '../pages/inspection-sampling.page';
-
-function taoDuLieu(): SamplingData {
-  const so = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
-  return {
-    code: `AT${so}`,
-    shortText: `Auto test ${so}`,
-    type: 'Fixed Sample',
-    sampleSize: '5',
-    longText: 'Dữ liệu tạo bởi auto test',
-  };
-}
+import { InspectionSamplingPage } from '../pages/inspection-sampling.page';
+import { SAMPLING_TYPES, generateSamplingData } from './data/inspection-sampling.data';
 
 test.describe('Inspection Sampling - CRUD', () => {
   let sampling: InspectionSamplingPage;
@@ -34,9 +24,9 @@ test.describe('Inspection Sampling - CRUD', () => {
 
   // CREATE
   test('TC02 - Create: tạo mới thành công', async () => {
-    const data = taoDuLieu();
+    const data = generateSamplingData();
     try {
-      await sampling.taoMoi(data);
+      await sampling.create(data);
 
       // Kiểm tra bản ghi mới có trong danh sách
       await sampling.goto();
@@ -45,7 +35,7 @@ test.describe('Inspection Sampling - CRUD', () => {
       await expect(row).toContainText(data.shortText);
       await expect(row).toContainText(data.type);
     } finally {
-      await sampling.xoaNeuCo(data.code); // dọn dữ liệu
+      await sampling.deleteIfExists(data.code); // dọn dữ liệu
     }
   });
 
@@ -60,46 +50,46 @@ test.describe('Inspection Sampling - CRUD', () => {
 
   // READ  
   test('TC04 - Read: xem chi tiết một bản ghi', async ({ page }) => {
-    const data = taoDuLieu();
+    const data = generateSamplingData();
     try {
-      await sampling.taoMoi(data);
+      await sampling.create(data);
       await sampling.goto();
 
-      await sampling.xemChiTiet(data.code);
+      await sampling.viewDetails(data.code);
       await expect(page.getByRole('textbox', { name: /Sampling Procedure/i })).toHaveValue(data.code);
       await expect(page.getByRole('textbox', { name: /Short Text/i })).toHaveValue(data.shortText);
     } finally {
-      await sampling.xoaNeuCo(data.code);
+      await sampling.deleteIfExists(data.code);
     }
   });
 
   // UPDATE
   test('TC05 - Update: sửa Short Text', async ({ page }) => {
-    const data = taoDuLieu();
+    const data = generateSamplingData();
     const shortTextMoi = `${data.shortText} (đã sửa)`;
     try {
-      await sampling.taoMoi(data);
+      await sampling.create(data);
       await sampling.goto();
 
-      await sampling.moSua(data.code);
-      await sampling.dienForm({ shortText: shortTextMoi });
-      await sampling.luu();
+      await sampling.openEdit(data.code);
+      await sampling.fillForm({ shortText: shortTextMoi });
+      await sampling.save();
 
       await sampling.goto();
       await expect(sampling.rowOf(data.code)).toContainText(shortTextMoi);
     } finally {
-      await sampling.xoaNeuCo(data.code);
+      await sampling.deleteIfExists(data.code);
     }
   });
 
   // DELETE
   test('TC06 - Delete: xóa bản ghi', async () => {
-    const data = taoDuLieu();
-    await sampling.taoMoi(data);
+    const data = generateSamplingData();
+    await sampling.create(data);
     await sampling.goto();
     await expect(sampling.rowOf(data.code)).toBeVisible();
 
-    await sampling.xoa(data.code); // đã kiểm tra dòng biến mất bên trong hàm xoa()
+    await sampling.delete(data.code); // đã kiểm tra dòng biến mất bên trong hàm delete()
 
     // Tải lại trang  
     await sampling.goto();
@@ -115,7 +105,7 @@ test.describe('Inspection Sampling - CRUD', () => {
   });
 
   test.describe('TC08 - Filter theo Sampling Type', () => {
-    for (const type of ['Fixed Sample', 'Percentage sample', '100% Inspection'] as const) {
+    for (const type of SAMPLING_TYPES) {
       test(`lọc đúng các dòng ${type}`, async () => {
         await sampling.filterBy(sampling.samplingTypeFilter, type);
 
