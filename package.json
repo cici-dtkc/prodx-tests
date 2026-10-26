@@ -1,20 +1,20 @@
 {
-  "name": "prodx-e2e-tests",
+  "name": "prodx-tests",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cici-dtkc/prodx-e2e-tests.git"
+    "url": "git+https://github.com/cici-dtkc/prodx-tests.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/cici-dtkc/prodx-e2e-tests/issues"
+    "url": "https://github.com/cici-dtkc/prodx-tests/issues"
   },
-  "homepage": "https://github.com/cici-dtkc/prodx-e2e-tests#readme",
+  "homepage": "https://github.com/cici-dtkc/prodx-tests#readme",
   "devDependencies": {
     "@playwright/test": "^1.64.1",
     "@types/node": "^26.6.5",
