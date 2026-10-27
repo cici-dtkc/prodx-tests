@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import * as fs from 'fs';
 import { MaterialInspectionAssignmentPage } from '../pages/material-inspection-assignment.page';
-import { IMPORT_ASSIGNMENT_DATA } from './data/material-inspection-assignment.data';
+import { IMPORT_ASSIGNMENT_DATA, IMPORT_ASSIGNMENT_EXCEL_DATA } from './data/material-inspection-assignment.data';
 import {
   FILE_SAI,
   buildExcelFromTemplate,
@@ -17,13 +17,11 @@ test.describe('Material Inspection Assignment - Import', () => {
   });
 
   test('TC01 - Import: bấm Import thì cho phép chọn file', async ({ page }) => {
-    const hopChonFile = page.waitForEvent('filechooser', { timeout: 3_000 }).catch(() => null);
     await assignment.importButton.click();
-    const chooser = await hopChonFile;
-
-    const coHopThoai = await page.getByRole('dialog').isVisible();
-    const coOChonFile = (await page.locator('input[type="file"]').count()) > 0;
-    expect(chooser !== null || coHopThoai || coOChonFile).toBeTruthy();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 5_000 });
+    const coOChonFile = (await dialog.locator('input[type="file"]').count()) > 0;
+    expect(coOChonFile).toBeTruthy();
   });
 
   test('TC02 - Import: file sai định dạng không tạo thêm dữ liệu', async () => {
@@ -31,6 +29,7 @@ test.describe('Material Inspection Assignment - Import', () => {
 
     await assignment.selectImportFile(FILE_SAI);
     await assignment.confirmImport();
+    await assignment.closeImportDialog();
 
     await assignment.goto();
     const sau = await assignment.dataRows.count();
@@ -44,10 +43,10 @@ test.describe('Material Inspection Assignment - Import', () => {
 
     const fileHopLe = testInfo.outputPath('assignment-import.xlsx');
     await buildExcelFromTemplate(templatePath, fileHopLe, {
-      'Inspection Type *': IMPORT_ASSIGNMENT_DATA.inspectionType,
-      'Material *': IMPORT_ASSIGNMENT_DATA.material,
-      'Frequency': Number(IMPORT_ASSIGNMENT_DATA.frequency),
-      'Unit': IMPORT_ASSIGNMENT_DATA.unit,
+      'Inspection Type *': IMPORT_ASSIGNMENT_EXCEL_DATA.inspectionType,
+      'Material *': IMPORT_ASSIGNMENT_EXCEL_DATA.material,
+      'Frequency': IMPORT_ASSIGNMENT_EXCEL_DATA.frequency,
+      'Unit': IMPORT_ASSIGNMENT_EXCEL_DATA.unit,
     });
 
     try {
@@ -69,12 +68,15 @@ test.describe('Material Inspection Assignment - Import', () => {
     // Chỉ điền Material *, bỏ trống Inspection Type *  
     const fileBatBuoc = testInfo.outputPath('assignment-import-missing-required.xlsx');
     await buildExcelFromTemplate(templatePath, fileBatBuoc, {
-      'Material *': IMPORT_ASSIGNMENT_DATA.material,
+      'Material *': IMPORT_ASSIGNMENT_EXCEL_DATA.material,
     });
 
     const truoc = await assignment.dataRows.count();
     await assignment.selectImportFile(fileBatBuoc);
     await assignment.confirmImport();
+
+    // Dialog có thể còn mở (hiển thị lỗi) — đóng lại trước khi kiểm tra danh sách
+    await assignment.closeImportDialog();
 
     await assignment.goto();
     const sau = await assignment.dataRows.count();
