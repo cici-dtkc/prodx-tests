@@ -63,6 +63,12 @@ export class MaterialInspectionAssignmentPage {
   get dataRows(): Locator {
     return this.page.locator('tbody tr');
   }
+  get importButton(): Locator {
+    return this.page.getByRole('button', { name: 'Import', exact: true });
+  }
+  get exportButton(): Locator {
+    return this.page.getByRole('button', { name: 'Export', exact: true });
+  }
 
   rowOf(data: Pick<MaterialInspectionAssignmentData, 'inspectionType' | 'material'>): Locator {
     return this.dataRows
@@ -129,6 +135,62 @@ export class MaterialInspectionAssignmentPage {
     if (await this.rowOf(data).count() > 0) {
       await this.delete(data);
     }
+  }
+
+  async exportFile() {
+    const downloadPromise = this.page.waitForEvent('download');
+    await this.exportButton.click();
+    return downloadPromise;
+  }
+
+  async selectImportFile(filePath: string) {
+    const dialog = this.page.getByRole('dialog');
+    if (!(await dialog.isVisible())) {
+      await this.importButton.click();
+      await expect(dialog).toBeVisible({ timeout: 5_000 });
+    }
+    await dialog.locator('input[type="file"]').setInputFiles(filePath);
+  }
+
+  async confirmImport() {
+    const dialog = this.page.getByRole('dialog');
+    const importBtn = dialog.getByRole('button', { name: 'Import', exact: true });
+
+    // Nút Import disabled nghĩa là file không hợp lệ — không thể submit
+    if (await importBtn.isDisabled()) return;
+
+    await Promise.all([
+      this.page.waitForResponse(
+        (r) => ['POST', 'PUT', 'PATCH'].includes(r.request().method()),
+        { timeout: 15_000 },
+      ),
+      importBtn.click(),
+    ]);
+
+    // Dialog chỉ đóng khi import thành công — nếu server trả lỗi UI giữ dialog
+    await expect(dialog).toBeHidden({ timeout: 15_000 }).catch(() => null);
+  }
+
+  async closeImportDialog() {
+    const dialog = this.page.getByRole('dialog');
+    if (await dialog.isVisible()) {
+      await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+      await expect(dialog).toBeHidden({ timeout: 5_000 });
+    }
+  }
+
+  async downloadImportTemplate() {
+    await this.importButton.click();
+    const dialog = this.page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 5_000 });
+    const [download] = await Promise.all([
+      this.page.waitForEvent('download'),
+      dialog.getByRole('button', { name: /Download template/i }).click(),
+    ]);
+    // Đóng dialog để UI trở về trạng thái ban đầu
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(dialog).toBeHidden({ timeout: 5_000 });
+    return download;
   }
 
   private actionOf(data: Pick<MaterialInspectionAssignmentData, 'inspectionType' | 'material'>, index: 0 | 1 | 2): Locator {
