@@ -7,12 +7,12 @@ export class InspectionSelectedSetPage {
     this.page = page;
   }
 
-  //   Heading 
+  // ── Heading ───────────────────────────────────────────────────────────────
   get heading(): Locator {
     return this.page.getByRole('heading', { name: /^Inspection Selected Set/ });
   }
 
-  //   Toolbar  
+  // ── Toolbar ───────────────────────────────────────────────────────────────
   get createButton(): Locator {
     return this.page.getByRole('button', { name: 'Create', exact: true });
   }
@@ -35,12 +35,33 @@ export class InspectionSelectedSetPage {
     return this.page.getByRole('button', { name: 'Show filters', exact: true });
   }
 
-  //   Table 
+  // ── Filters ───────────────────────────────────────────────────────────────
+  get catalogTypeFilter(): Locator {
+    return this.page.getByRole('combobox', { name: 'Catalog Type', exact: true });
+  }
+  get selectedSetFilter(): Locator {
+    return this.page.getByRole('combobox', { name: 'Selected Set', exact: true });
+  }
+  get statusFilter(): Locator {
+    return this.page.getByRole('combobox', { name: 'Status', exact: true });
+  }
+  get createdByFilter(): Locator {
+    return this.page.getByRole('combobox', { name: 'Created By', exact: true });
+  }
+
+  // ── Table ─────────────────────────────────────────────────────────────────
   get dataRows(): Locator {
     return this.page.locator('tbody tr');
   }
 
-  //   Navigation  
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  async selectOption(field: Locator, value: string) {
+    await field.click();
+    const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    await this.page.getByRole('option', { name: new RegExp(`^${escaped}(?:\\s|$)`, 'i') }).click();
+  }
+
+  // ── Navigation ────────────────────────────────────────────────────────────
   async goto() {
     await this.page.goto('/development/qm/selected-set', { waitUntil: 'domcontentloaded' });
     await expect(this.heading).toBeVisible();
