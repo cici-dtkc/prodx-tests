@@ -11,7 +11,7 @@ setup('đăng nhập', async ({ page }) => {
   }
 
   // Vào trang chủ, chưa đăng nhập thì hệ thống tự chuyển sang trang đăng nhập
-  await page.goto('/');
+  await page.goto('/development/');
 
   // TEST_USER phải là EMAIL của tài khoản (ô này kiểm tra định dạng email)
   await page.getByPlaceholder('you@example.com').fill(user);
