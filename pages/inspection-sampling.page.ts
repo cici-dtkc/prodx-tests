@@ -137,7 +137,7 @@ export class InspectionSamplingPage {
   async goto() {
     for (let lan = 1; lan <= 2; lan++) {
       try {
-        await this.page.goto('/qm/inspection-sampling', { waitUntil: 'domcontentloaded' });
+        await this.page.goto('/development/qm/inspection-sampling', { waitUntil: 'domcontentloaded' });
         break;
       } catch (loi) {
         if (lan === 2 || !String(loi).includes('ERR_ABORTED')) throw loi;
