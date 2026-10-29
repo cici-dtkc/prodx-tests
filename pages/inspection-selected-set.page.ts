@@ -7,12 +7,12 @@ export class InspectionSelectedSetPage {
     this.page = page;
   }
 
-  // ── Heading ───────────────────────────────────────────────────────────────
+  //   Heading  
   get heading(): Locator {
     return this.page.getByRole('heading', { name: /^Inspection Selected Set/ });
   }
 
-  // ── Toolbar ───────────────────────────────────────────────────────────────
+  //   Toolbar  
   get createButton(): Locator {
     return this.page.getByRole('button', { name: 'Create', exact: true });
   }
@@ -35,7 +35,7 @@ export class InspectionSelectedSetPage {
     return this.page.getByRole('button', { name: 'Show filters', exact: true });
   }
 
-  // ── Filters ───────────────────────────────────────────────────────────────
+  //   Filters  
   get catalogTypeFilter(): Locator {
     return this.page.getByRole('combobox', { name: 'Catalog Type', exact: true });
   }
@@ -49,19 +49,34 @@ export class InspectionSelectedSetPage {
     return this.page.getByRole('combobox', { name: 'Created By', exact: true });
   }
 
-  // ── Table ─────────────────────────────────────────────────────────────────
+  //   Table  
   get dataRows(): Locator {
     return this.page.locator('tbody tr');
   }
 
-  // ── Helpers ───────────────────────────────────────────────────────────────
+  rowOf(selectedSet: string): Locator {
+    return this.dataRows.filter({ hasText: selectedSet });
+  }
+
+  async viewDetails(selectedSet: string) {
+    await this.rowOf(selectedSet).getByRole('button', { name: 'Display', exact: true }).click();
+    await expect(this.page.getByRole('heading', { name: new RegExp(`Display selected set.*${selectedSet}`) })).toBeVisible();
+  }
+
+  // ── Detail page links ─────────────────────────────────────────────────────
+  get backLink(): Locator {
+    return this.page.getByRole('link', { name: 'Back', exact: true });
+  }
+  get editLink(): Locator {
+    return this.page.getByRole('link', { name: 'Edit', exact: true });
+  }
   async selectOption(field: Locator, value: string) {
     await field.click();
     const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     await this.page.getByRole('option', { name: new RegExp(`^${escaped}(?:\\s|$)`, 'i') }).click();
   }
 
-  // ── Navigation ────────────────────────────────────────────────────────────
+  //   Navigation  
   async goto() {
     await this.page.goto('/development/qm/selected-set', { waitUntil: 'domcontentloaded' });
     await expect(this.heading).toBeVisible();

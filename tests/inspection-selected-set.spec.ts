@@ -53,4 +53,16 @@ test.describe('Inspection Selected Set', () => {
     await iss.resetButton.click();
     await expect(iss.resetButton).toBeDisabled();
   });
+
+  test('TC07 - nhấn Display mở trang chi tiết', async ({ page }) => {
+    // Lấy Selected Set của dòng đầu tiên
+    await expect(iss.dataRows.first()).toBeVisible();
+    const selectedSet = (await iss.dataRows.first().getByRole('cell').nth(1).innerText()).trim();
+
+    await iss.viewDetails(selectedSet);
+
+    await expect(page.getByRole('heading', { name: /Display selected set/i })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Back', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Edit', exact: true })).toBeVisible();
+  });
 });
