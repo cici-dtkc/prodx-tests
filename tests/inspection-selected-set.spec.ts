@@ -55,14 +55,51 @@ test.describe('Inspection Selected Set', () => {
   });
 
   test('TC07 - nhấn Display mở trang chi tiết', async ({ page }) => {
-    // Lấy Selected Set của dòng đầu tiên
     await expect(iss.dataRows.first()).toBeVisible();
     const selectedSet = (await iss.dataRows.first().getByRole('cell').nth(1).innerText()).trim();
-
     await iss.viewDetails(selectedSet);
-
     await expect(page.getByRole('heading', { name: /Display selected set/i })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Back', exact: true })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Edit', exact: true })).toBeVisible();
+    await expect(iss.backLink).toBeVisible();
+  });
+
+  test('TC08 - nhấn Edit mở trang chỉnh sửa', async ({ page }) => {
+    await expect(iss.dataRows.first()).toBeVisible();
+    const selectedSet = (await iss.dataRows.first().getByRole('cell').nth(1).innerText()).trim();
+    await iss.openEdit(selectedSet);
+    await expect(page.getByRole('heading', { name: /Change selected set/i })).toBeVisible();
+    await expect(iss.saveButton).toBeVisible();
+    await expect(iss.backButton).toBeVisible();
+    await expect(page.getByRole('combobox', { name: /Catalog Type \*/i })).toBeDisabled();
+    await expect(page.getByLabel(/Selected Set \*/i)).toBeDisabled();
+  });
+
+  test('TC09 - sửa Short Text và lưu thành công', async () => {
+    await expect(iss.dataRows.first()).toBeVisible();
+    const selectedSet = (await iss.dataRows.first().getByRole('cell').nth(1).innerText()).trim();
+    const originalText = (await iss.dataRows.first().getByRole('cell').nth(2).innerText()).trim();
+    const newText = `${originalText} (edited)`;
+
+    await iss.openEdit(selectedSet);
+    await iss.shortTextField.fill(newText);
+    await iss.saveAndConfirm();
+
+    await iss.goto();
+    await iss.openEdit(selectedSet);
+    await iss.shortTextField.fill(originalText);
+    await iss.saveAndConfirm();
+  });
+
+  test('TC10 - tạo mới Selected Set', async () => {
+    const selectedSet = `AT${Date.now().toString().slice(-6)}`;
+    await iss.create(selectedSet, 'Auto test selected set');
+    await iss.searchBySelectedSet(selectedSet);
+    await expect(iss.rowOf(selectedSet)).toBeVisible({ timeout: 10_000 });
+  });
+
+  test('TC11 - không tạo được nếu thiếu trường bắt buộc', async ({ page }) => {
+    await iss.createButton.click();
+    await expect(page.getByRole('heading', { name: /Step 1 of 2/i })).toBeVisible();
+    await iss.nextStepButton.click();
+    await expect(page.getByRole('heading', { name: /Step 1 of 2/i })).toBeVisible();
   });
 });
