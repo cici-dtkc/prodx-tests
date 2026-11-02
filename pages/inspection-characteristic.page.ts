@@ -36,8 +36,6 @@ export class InspectionCharacteristicPage {
     return this.page.getByRole('button', { name: 'Create', exact: true });
   }
   get copyButton(): Locator {
-    // The toolbar Copy button sits above the table in the table action bar (not inside tbody).
-    // Exclude per-row action buttons by not searching inside table rows.
     return this.page.locator('main').getByRole('button', { name: 'Copy', exact: true })
       .filter({ hasText: 'Copy' })
       .first();
