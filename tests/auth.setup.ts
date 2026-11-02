@@ -11,7 +11,7 @@ setup('đăng nhập', async ({ page }) => {
   }
 
   // Vào trang chủ, chưa đăng nhập thì hệ thống tự chuyển sang trang đăng nhập
-  await page.goto('/');
+  await page.goto('/development/');
 
   // TEST_USER phải là EMAIL của tài khoản (ô này kiểm tra định dạng email)
   await page.getByPlaceholder('you@example.com').fill(user);
@@ -20,6 +20,21 @@ setup('đăng nhập', async ({ page }) => {
 
   await expect(page.getByRole('button', { name: 'Sign in' })).toHaveCount(0);
   await page.waitForURL((url) => !/login|sign-?in/i.test(url.pathname));
+
+  const enButton = page.getByRole('button', { name: 'en', exact: true })
+    .or(page.getByRole('button', { name: 'EN', exact: true }));
+  if (await enButton.isVisible({ timeout: 3_000 }).catch(() => false)) {
+    const isPressed = await enButton.getAttribute('aria-pressed');
+    if (isPressed !== 'true') {
+      await enButton.click();
+      await page.waitForFunction(
+        () => document.documentElement.lang === 'en' ||
+              document.querySelector('[aria-pressed="true"]')?.textContent?.toLowerCase() === 'en',
+        { timeout: 5_000 },
+      ).catch(() => null);
+      await page.waitForTimeout(500);
+    }
+  }
 
   await page.context().storageState({ path: AUTH_FILE });
 });

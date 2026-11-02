@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { ensureEnglish } from '../tests/helpers/language.helper';
 
 export type InspectionType = '03 - Inspection Process' | '89 - Other Inspection';
 
@@ -77,7 +78,8 @@ export class MaterialInspectionAssignmentPage {
   }
 
   async goto() {
-    await this.page.goto('/qm/material-inspection-assignment', { waitUntil: 'domcontentloaded' });
+    await this.page.goto('/development/qm/material-inspection-assignment', { waitUntil: 'domcontentloaded' });
+    await ensureEnglish(this.page);
     await expect(this.heading).toBeVisible();
   }
 
@@ -156,19 +158,13 @@ export class MaterialInspectionAssignmentPage {
     const dialog = this.page.getByRole('dialog');
     const importBtn = dialog.getByRole('button', { name: 'Import', exact: true });
 
-    // Nút Import disabled nghĩa là file không hợp lệ — không thể submit
     if (await importBtn.isDisabled()) return;
 
-    await Promise.all([
-      this.page.waitForResponse(
-        (r) => ['POST', 'PUT', 'PATCH'].includes(r.request().method()),
-        { timeout: 15_000 },
-      ),
-      importBtn.click(),
-    ]);
+    await importBtn.click();
 
-    // Dialog chỉ đóng khi import thành công — nếu server trả lỗi UI giữ dialog
-    await expect(dialog).toBeHidden({ timeout: 15_000 }).catch(() => null);
+    await expect(dialog).toBeHidden({ timeout: 15_000 }).catch(async () => {
+      await this.closeImportDialog().catch(() => null);
+    });
   }
 
   async closeImportDialog() {

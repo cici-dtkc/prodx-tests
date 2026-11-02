@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { ensureEnglish } from '../tests/helpers/language.helper';
 
 export type SamplingType = 'Fixed Sample' | 'Percentage sample' | '100% Inspection';
 
@@ -43,7 +44,7 @@ export class InspectionSamplingPage {
     return this.page.getByRole('combobox', { name: 'Created By', exact: true });
   }
   get clearFiltersButton(): Locator {
-    return this.page.getByRole('button', { name: /^Clear(?: \(\d+\))?$/ });
+    return this.page.getByRole('button', { name: /^Reset(?: \(\d+\))?$/ });
   }
   get hideFiltersButton(): Locator {
     return this.page.getByRole('button', { name: 'Hide filters', exact: true });
@@ -115,6 +116,12 @@ export class InspectionSamplingPage {
     await filter.click();
     await this.page.getByRole('option', { name: new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') }).click();
     await expect(filter).toContainText(value);
+    // Click Go để apply filter
+    const goBtn = this.page.getByRole('button', { name: 'Go', exact: true });
+    if (await goBtn.isVisible({ timeout: 1_000 }).catch(() => false)) {
+      await goBtn.click();
+      await this.page.waitForLoadState('networkidle').catch(() => null);
+    }
   }
 
   async createdByOptions(): Promise<string[]> {
@@ -137,13 +144,14 @@ export class InspectionSamplingPage {
   async goto() {
     for (let lan = 1; lan <= 2; lan++) {
       try {
-        await this.page.goto('/qm/inspection-sampling', { waitUntil: 'domcontentloaded' });
+        await this.page.goto('/development/qm/inspection-sampling', { waitUntil: 'domcontentloaded' });
         break;
       } catch (loi) {
         if (lan === 2 || !String(loi).includes('ERR_ABORTED')) throw loi;
       }
     }
-    await expect(this.heading).toBeVisible(); // chờ tiêu đề xuất hiện mới coi là trang đã sẵn sàng
+    await ensureEnglish(this.page);
+    await expect(this.heading).toBeVisible();
   }
 
   //  Create  

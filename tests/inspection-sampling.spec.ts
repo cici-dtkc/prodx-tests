@@ -156,12 +156,15 @@ test.describe('Inspection Sampling - CRUD', () => {
     }
   });
 
-  test('TC13 - Filter: Clear khôi phục dữ liệu và cả 3 bộ lọc về All', async () => {
+  test('TC13 - Filter: Clear khôi phục dữ liệu và cả 3 bộ lọc về All', async ({ page }) => {
     const initialCount = await sampling.rowCount();
     await sampling.filterBy(sampling.samplingTypeFilter, 'Fixed Sample');
     await expect(sampling.clearFiltersButton).toBeEnabled();
 
     await sampling.clearFiltersButton.click();
+    // Click Go để load lại data sau khi reset
+    await page.getByRole('button', { name: 'Go', exact: true }).click().catch(() => null);
+    await page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => null);
 
     await expect(sampling.dataRows).toHaveCount(initialCount);
     await expect(sampling.samplingProcedureFilter).toHaveText('All');
