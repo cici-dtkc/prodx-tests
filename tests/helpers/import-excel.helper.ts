@@ -58,3 +58,35 @@ export async function readExportedFile(
   const dataRowCount = sheet.actualRowCount - 1;
   return { content, dataRowCount };
 }
+
+ 
+export async function buildExcelFromTemplateMultiSheet(
+  templatePath: string,
+  outputPath: string,
+  sheets: Record<string, Record<string, unknown>[]>,
+): Promise<void> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(templatePath);
+
+  for (const [sheetName, rows] of Object.entries(sheets)) {
+    const sheet = workbook.getWorksheet(sheetName);
+    if (!sheet) continue;
+
+    const columns = new Map<string, number>();
+    sheet.getRow(1).eachCell((cell, colNumber) =>
+      columns.set(String(cell.value).trim(), colNumber),
+    );
+
+    for (const data of rows) {
+      const row = sheet.addRow(new Array(sheet.columnCount).fill(null));
+      for (const [header, value] of Object.entries(data)) {
+        const colNumber = columns.get(header);
+        if (colNumber !== undefined) {
+          row.getCell(colNumber).value = value as ExcelJS.CellValue;
+        }
+      }
+    }
+  }
+
+  await workbook.xlsx.writeFile(outputPath);
+}

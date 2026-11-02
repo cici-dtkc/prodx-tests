@@ -185,4 +185,51 @@ export class InspectionSelectedSetPage {
       this.page.getByRole('heading', { name: /Display selected set|Inspection Selected Set/i })
     ).toBeVisible({ timeout: 10_000 });
   }
+
+  //   Export / Import  
+  async exportFile() {
+    const downloadPromise = this.page.waitForEvent('download');
+    await this.exportButton.click();
+    return downloadPromise;
+  }
+
+  async selectImportFile(filePath: string) {
+    const dialog = this.page.getByRole('dialog');
+    if (!(await dialog.isVisible())) {
+      await this.importButton.click();
+      await expect(dialog).toBeVisible({ timeout: 5_000 });
+    }
+    await dialog.locator('input[type="file"]').setInputFiles(filePath);
+  }
+
+  async confirmImport() {
+    const dialog = this.page.getByRole('dialog');
+    const importBtn = dialog.getByRole('button', { name: 'Import', exact: true });
+    if (await importBtn.isDisabled()) return;
+    await importBtn.click();
+    await expect(dialog).toBeHidden({ timeout: 5_000 }).catch(async () => {
+      await this.closeImportDialog().catch(() => null);
+    });
+  }
+
+  async closeImportDialog() {
+    const dialog = this.page.getByRole('dialog');
+    if (await dialog.isVisible()) {
+      await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+      await expect(dialog).toBeHidden({ timeout: 5_000 });
+    }
+  }
+
+  async downloadImportTemplate() {
+    await this.importButton.click();
+    const dialog = this.page.getByRole('dialog');
+    await expect(dialog).toBeVisible({ timeout: 5_000 });
+    const [download] = await Promise.all([
+      this.page.waitForEvent('download'),
+      dialog.getByRole('button', { name: /Download template/i }).click(),
+    ]);
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(dialog).toBeHidden({ timeout: 5_000 });
+    return download;
+  }
 }
