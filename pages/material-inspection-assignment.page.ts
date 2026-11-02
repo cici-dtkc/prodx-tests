@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { ensureEnglish } from '../tests/helpers/language.helper';
 
 export type InspectionType = '03 - Inspection Process' | '89 - Other Inspection';
 
@@ -78,6 +79,7 @@ export class MaterialInspectionAssignmentPage {
 
   async goto() {
     await this.page.goto('/development/qm/material-inspection-assignment', { waitUntil: 'domcontentloaded' });
+    await ensureEnglish(this.page);
     await expect(this.heading).toBeVisible();
   }
 

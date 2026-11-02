@@ -4,9 +4,12 @@ import {
   MASTER_CODE_GROUP_DATA,
 } from './data/master-code-group.data';
 
-/** Tạo codeGroup duy nhất theo timestamp để tránh conflict giữa các lần chạy */
 function uniqueCode() {
   return `AT${Date.now().toString().slice(-6)}`;
+}
+
+function uniqueEntryCode() {
+  return Date.now().toString().slice(-4);
 }
 
 test.describe('Master Code Group - CRUD', () => {
@@ -78,15 +81,16 @@ test.describe('Master Code Group - CRUD', () => {
     // Dùng record đầu tiên có sẵn trong danh sách
     await expect(mcg.dataRows.first()).toBeVisible();
     const codeGroup = (await mcg.dataRows.first().getByRole('cell').nth(1).innerText()).trim();
+    const newCode = uniqueEntryCode();
     await mcg.openEdit(codeGroup);
     await mcg.addCodeButton.click();
     const lastRow = page.locator('table tbody tr').last();
-    await lastRow.getByRole('textbox').nth(0).fill('0099');
+    await lastRow.getByRole('textbox').nth(0).fill(newCode);
     await lastRow.getByRole('textbox').nth(1).fill('Extra code');
     await mcg.saveAndConfirm();
     await mcg.searchByCodeGroup(codeGroup);
     await mcg.viewDetails(codeGroup);
-    await expect(page.getByRole('cell', { name: '0099' })).toBeVisible();
+    await expect(page.getByRole('cell', { name: newCode, exact: true })).toBeVisible();
   });
 
   test('TC08 - ẩn và hiện bộ lọc', async () => {

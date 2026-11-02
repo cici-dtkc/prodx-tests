@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { ensureEnglish } from '../tests/helpers/language.helper';
 
 export type CatalogType = '1 - Characteristic Attributes';
 export type StatusType = 'Released' | 'In Preparation' | 'Being Created';
@@ -96,6 +97,7 @@ export class MasterCodeGroupPage {
       await expect(leaveDialog).toBeHidden({ timeout: 3_000 });
     }
     await this.page.goto('/development/qm/master-code-group', { waitUntil: 'domcontentloaded' });
+    await ensureEnglish(this.page);
     await expect(this.heading).toBeVisible();
     await this.page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => null);
   }
@@ -105,6 +107,7 @@ export class MasterCodeGroupPage {
       `/development/qm/master-code-group?codeGroup=${encodeURIComponent(codeGroup)}`,
       { waitUntil: 'domcontentloaded' },
     );
+    await ensureEnglish(this.page);
     await expect(this.heading).toBeVisible();
   }
 
@@ -156,6 +159,7 @@ export class MasterCodeGroupPage {
     if (await leaveDialog.isVisible({ timeout: 3_000 }).catch(() => false)) {
       await leaveDialog.getByRole('button', { name: /save|confirm|yes|leave|continue/i }).first().click();
     }
+    await ensureEnglish(this.page);
     await expect(this.heading).toBeVisible({ timeout: 15_000 });
   }
 

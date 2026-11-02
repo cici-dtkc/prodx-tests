@@ -91,7 +91,7 @@ test.describe('Inspection Selected Set', () => {
 
   test('TC10 - tạo mới Selected Set', async () => {
     const selectedSet = `AT${Date.now().toString().slice(-6)}`;
-    await iss.create(selectedSet, 'Auto test selected set');
+    await iss.create(selectedSet, 'Auto test selected set', 'KTDEMO02');
     await iss.searchBySelectedSet(selectedSet);
     await expect(iss.rowOf(selectedSet)).toBeVisible({ timeout: 10_000 });
   });

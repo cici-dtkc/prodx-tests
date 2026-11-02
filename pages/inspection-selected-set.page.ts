@@ -1,4 +1,5 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { ensureEnglish } from '../tests/helpers/language.helper';
 
 export class InspectionSelectedSetPage {
   readonly page: Page;
@@ -95,8 +96,9 @@ export class InspectionSelectedSetPage {
   //   Navigation  
   async goto() {
     await this.page.goto('/development/qm/selected-set', { waitUntil: 'domcontentloaded' });
+    await this.page.waitForLoadState('networkidle', { timeout: 8_000 }).catch(() => null);
+    await ensureEnglish(this.page);
     await expect(this.heading).toBeVisible();
-    await this.page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => null);
   }
 
   async searchBySelectedSet(selectedSet: string) {
@@ -104,6 +106,7 @@ export class InspectionSelectedSetPage {
       `/development/qm/selected-set?selectedSet=${encodeURIComponent(selectedSet)}`,
       { waitUntil: 'domcontentloaded' },
     );
+    await ensureEnglish(this.page);
     await expect(this.heading).toBeVisible();
   }
 
@@ -143,13 +146,28 @@ export class InspectionSelectedSetPage {
     await expect(this.page.getByRole('heading', { name: /Step 2 of 2/i })).toBeVisible();
 
     // Bắt buộc phải thêm ít nhất một code group
-    const codeGroupCombo = this.page.getByRole('combobox', { name: /Pick a code group/i })
-      .or(this.page.locator('[placeholder*="code group" i]'));
+    const codeGroupCombo = this.page.getByRole('combobox', { name: /Add code group/i });
     await codeGroupCombo.click();
+    const codeGroupOptions = this.page.locator('[role="option"]:visible');
+    await expect(codeGroupOptions.first()).toBeVisible({ timeout: 5_000 });
     if (codeGroup) {
-      await this.page.getByRole('option', { name: new RegExp(codeGroup, 'i') }).first().click();
+      const selectedOption = codeGroupOptions.filter({ hasText: codeGroup }).first();
+      await selectedOption.click();
     } else {
-      await this.page.getByRole('option').first().click();
+      await codeGroupOptions.first().click();
+    }
+    await expect(this.page.getByText('No codes yet.')).toBeHidden({ timeout: 5_000 });
+
+    // Chọn Valuation Code cho từng code nếu trường này bắt buộc
+    const valuationCombos = this.page.locator('tbody tr')
+      .getByRole('combobox', { name: /^Valuation Code/i });
+    const valuationCount = await valuationCombos.count();
+    for (let i = 0; i < valuationCount; i++) {
+      const valuationCombo = valuationCombos.nth(i);
+      if (await valuationCombo.isVisible({ timeout: 3_000 }).catch(() => false)) {
+        await valuationCombo.click();
+        await this.page.locator('[role="option"]:visible').first().click();
+      }
     }
 
     await this.saveAndConfirm();
@@ -161,6 +179,8 @@ export class InspectionSelectedSetPage {
     if (await dialog.isVisible({ timeout: 3_000 }).catch(() => false)) {
       await dialog.getByRole('button', { name: 'Save', exact: true }).click();
     }
+    await this.page.waitForLoadState('networkidle', { timeout: 8_000 }).catch(() => null);
+    await ensureEnglish(this.page);
     await expect(
       this.page.getByRole('heading', { name: /Display selected set|Inspection Selected Set/i })
     ).toBeVisible({ timeout: 10_000 });

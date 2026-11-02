@@ -5,11 +5,12 @@ dotenv.config();
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: true,
+  fullyParallel: false,
+  workers: 1,
   reporter: 'html',
   use: {
     baseURL: process.env.BASE_URL,
-    launchOptions: { slowMo: 500 },
+    launchOptions: { slowMo: 100 },
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
     trace: 'retain-on-failure',
