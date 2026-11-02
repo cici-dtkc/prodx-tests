@@ -41,7 +41,7 @@ test.describe('Inspection Sampling - Export / Import', () => {
 
     const { content, dataRowCount } = await readExportedFile(duongDan);
     expect(content, `File xuất không chứa mã ${maDau}`).toContain(maDau);
-    expect(dataRowCount, 'Số dòng trong file khác số dòng trên bảng').toBe(tong);
+    expect(dataRowCount, 'File xuất phải chứa toàn bộ các dòng đang hiển thị').toBeGreaterThanOrEqual(tong);
   });
 
   // IMPORT

@@ -136,7 +136,21 @@ export class MaterialInspectionAssignmentPage {
     await this.goto();
     if (await this.rowOf(data).count() > 0) {
       await this.delete(data);
+      return;
     }
+ 
+    await this.createButton.click();
+    await this.selectOption(this.inspectionTypeField, data.inspectionType);
+    await this.selectOption(this.materialField, data.material);
+    const existingLink = this.page.getByRole('link', { name: new RegExp(`Open existing ${data.material}`, 'i') });
+    if (await existingLink.isVisible({ timeout: 2_000 }).catch(() => false)) {
+      await existingLink.click();
+      await expect(this.page.getByRole('heading', { name: /Change Material Inspection Assignment/i })).toBeVisible();
+      await this.page.getByRole('button', { name: 'Delete', exact: true }).click();
+      const dialog = this.page.getByRole('alertdialog').or(this.page.getByRole('dialog'));
+      await dialog.getByRole('button', { name: /delete|confirm|yes/i }).click();
+    }
+    await this.goto();
   }
 
   async exportFile() {
