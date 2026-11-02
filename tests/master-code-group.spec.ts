@@ -47,6 +47,7 @@ test.describe('Master Code Group - CRUD', () => {
   test('TC03 - tạo mới Code Group', async () => {
     const data = { ...MASTER_CODE_GROUP_DATA, codeGroup: uniqueCode() };
     await mcg.create(data);
+    await mcg.searchByCodeGroup(data.codeGroup);
     await expect(mcg.rowOf(data.codeGroup)).toBeVisible({ timeout: 10_000 });
   });
 
