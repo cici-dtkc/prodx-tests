@@ -52,6 +52,9 @@ export class InspectionSamplingPage {
   get showFiltersButton(): Locator {
     return this.page.getByRole('button', { name: 'Show filters', exact: true });
   }
+  get nextPageButton(): Locator {
+    return this.page.getByRole('button', { name: 'Next page', exact: true });
+  }
   get exportButton(): Locator {
     return this.page.getByRole('button', { name: 'Export', exact: true });
   }
@@ -73,6 +76,10 @@ export class InspectionSamplingPage {
 
   async rowCount(): Promise<number> {
     return this.dataRows.count();
+  }
+
+  async filterByCode(code: string) {
+    await this.filterBy(this.samplingProcedureFilter, code);
   }
 
   async exportFile() {
@@ -152,6 +159,22 @@ export class InspectionSamplingPage {
     }
     await ensureEnglish(this.page);
     await expect(this.heading).toBeVisible();
+    await this.page.waitForLoadState('networkidle', { timeout: 8_000 }).catch(() => null);
+    await this.showAllRows();
+  }
+
+  private async showAllRows() {
+    const pageSize = this.page.getByRole('combobox').last();
+    if (!await pageSize.isVisible().catch(() => false)) return;
+
+    await pageSize.click();
+    const largestOption = this.page.getByRole('option').filter({ hasText: /^\d+$/ }).last();
+    if (await largestOption.isVisible().catch(() => false)) {
+      await largestOption.click();
+      await this.page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => null);
+    } else {
+      await this.page.keyboard.press('Escape');
+    }
   }
 
   //  Create  
@@ -236,8 +259,14 @@ export class InspectionSamplingPage {
   async deleteIfExists(code: string) {
     try {
       await this.goto();
-      if ((await this.rowOf(code).count()) > 0) {
-        await this.delete(code);
+      while (true) {
+        if ((await this.rowOf(code).count()) > 0) {
+          await this.delete(code);
+          return;
+        }
+        if (await this.nextPageButton.isDisabled()) return;
+        await this.nextPageButton.click();
+        await this.page.waitForLoadState('networkidle', { timeout: 5_000 }).catch(() => null);
       }
     } catch (loi) {
       console.warn(`Không dọn được dữ liệu test ${code}:`, loi);

@@ -68,9 +68,10 @@ test.describe('Inspection Lot', () => {
 
   test('TC07 - displays Inspection Lot Step 2 header and MIC controls', async ({ page }) => {
     await lot.createButton.click();
-    await page.getByText('Phiếu đa công đoạn', { exact: true }).click();
+    await page.getByRole('radio', { name: 'Phiếu đa công đoạn', exact: true }).click();
+    await lot.selectOption(lot.projectField, 'D.26.046 - Dự án One Central');
     await lot.selectOption(lot.plantField, '1010 - Nhà máy Châu Đức');
-    await lot.selectOption(lot.materialField, '10000003 - Kính hộp Low-E 8-15-8');
+    await lot.selectOption(lot.materialGroupField, '5015 - Unitized');
     await lot.continueButton.click();
     await expect(page.getByRole('heading', { name: /Step 2 of 2/i })).toBeVisible();
 
@@ -93,12 +94,24 @@ test.describe('Inspection Lot', () => {
     await expect(lot.saveButton).toBeVisible();
   });
 
-  test('TC08 - creates a standard Inspection Lot with material 10000003', async () => {
+  test('TC08 - creates an Inspection Lot from material group - Phiếu đa công đoạn', async () => {
     await lot.create({
       plant: '1010 - Nhà máy Châu Đức',
       origin: 'Inspection Process',
       lotType: 'Phiếu đa công đoạn',
-      material: '10000003 - Kính hộp Low-E 8-15-8',
+      project: 'D.26.046 - Dự án One Central',
+      materialGroup: '5015 - Unitized',
+    });
+    await expect(lot.dataRows.first()).toBeVisible();
+  });
+
+  test('TC09 - creates an Inspection Lot from material group - Phiếu test keo', async () => {
+    await lot.create({
+      plant: 'V002 - Châu Đức',
+      origin: 'Other Inspection',
+      lotType: 'Phiếu test keo',
+      project: 'D.26.046 - Dự án One Central',
+      materialGroup: '2401 - Silicone và hóa chất khác',
     });
     await expect(lot.dataRows.first()).toBeVisible();
   });

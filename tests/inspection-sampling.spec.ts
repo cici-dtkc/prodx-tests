@@ -30,6 +30,7 @@ test.describe('Inspection Sampling - CRUD', () => {
 
       // Kiểm tra bản ghi mới có trong danh sách
       await sampling.goto();
+      await sampling.filterByCode(data.code);
       const row = sampling.rowOf(data.code);
       await expect(row).toBeVisible();
       await expect(row).toContainText(data.shortText);
@@ -54,6 +55,7 @@ test.describe('Inspection Sampling - CRUD', () => {
     try {
       await sampling.create(data);
       await sampling.goto();
+      await sampling.filterByCode(data.code);
 
       await sampling.viewDetails(data.code);
       await expect(page.getByRole('textbox', { name: /Sampling Procedure/i })).toHaveValue(data.code);
@@ -70,6 +72,7 @@ test.describe('Inspection Sampling - CRUD', () => {
     try {
       await sampling.create(data);
       await sampling.goto();
+      await sampling.filterByCode(data.code);
 
       await sampling.openEdit(data.code);
       await sampling.fillForm({ shortText: shortTextMoi });
@@ -87,6 +90,7 @@ test.describe('Inspection Sampling - CRUD', () => {
     const data = generateSamplingData();
     await sampling.create(data);
     await sampling.goto();
+    await sampling.filterByCode(data.code);
     await expect(sampling.rowOf(data.code)).toBeVisible();
 
     await sampling.delete(data.code); // đã kiểm tra dòng biến mất bên trong hàm delete()

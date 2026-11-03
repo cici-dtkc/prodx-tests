@@ -73,12 +73,16 @@ export class InspectionLotPage {
     return this.page.getByRole('combobox', { name: 'Material Group', exact: true });
   }
 
-  get materialField(): Locator {
-    return this.page.getByRole('combobox', { name: 'Material', exact: true });
-  }
-
   get inspectionLotField(): Locator {
     return this.page.getByLabel('Inspection Lot', { exact: true });
+  }
+
+  get fabricationDrawingField(): Locator {
+    return this.page.getByRole('combobox', { name: 'Fabrication drawing (Production Order)', exact: true });
+  }
+
+  get groupCounterField(): Locator {
+    return this.page.getByRole('combobox', { name: 'Group Counter', exact: true });
   }
 
   //   Helpers  
@@ -106,10 +110,9 @@ export class InspectionLotPage {
   async create(data: {
     plant: string;
     origin: string;
-    material?: string;
     lotType?: 'Phiếu đa công đoạn' | 'Phiếu test keo';
     project?: string;
-    materialGroup?: string;
+    materialGroup: string;
   }) {
     await this.createButton.click();
     await expect(this.page.getByRole('heading', { name: /Step 1 of 2/i })).toBeVisible();
@@ -122,12 +125,7 @@ export class InspectionLotPage {
       await this.selectOption(this.projectField, data.project);
     }
     await this.selectOption(this.plantField, data.plant);
-    if (data.materialGroup) {
-      await this.selectOption(this.materialGroupField, data.materialGroup);
-    }
-    if (data.material) {
-      await this.selectOption(this.materialField, data.material);
-    }
+    await this.selectOption(this.materialGroupField, data.materialGroup);
     if (await this.originField.isEnabled()) {
       await this.selectOption(this.originField, data.origin);
     }
@@ -135,8 +133,19 @@ export class InspectionLotPage {
 
     // Step 2: header and characteristics
     await expect(this.page.getByRole('heading', { name: /Step 2 of 2/i })).toBeVisible();
+    if (data.lotType === 'Phiếu đa công đoạn') {
+      await this.selectFirstAvailable(this.fabricationDrawingField);
+      await this.selectFirstAvailable(this.groupCounterField);
+    }
 
     await this.saveAndConfirm();
+  }
+
+  private async selectFirstAvailable(field: Locator) {
+    await field.click();
+    const option = this.page.getByRole('option').filter({ hasNotText: /^—$/ }).first();
+    await expect(option).toBeVisible();
+    await option.click();
   }
 
   async saveAndConfirm() {
