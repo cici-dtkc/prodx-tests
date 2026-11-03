@@ -25,14 +25,14 @@ test.describe('Material Inspection Assignment - Import', () => {
   });
 
   test('TC02 - Import: file sai định dạng không tạo thêm dữ liệu', async () => {
-    const truoc = await assignment.dataRows.count();
+    const truoc = await assignment.totalRowCount();
 
     await assignment.selectImportFile(FILE_SAI);
     await assignment.confirmImport();
     await assignment.closeImportDialog();
 
     await assignment.goto();
-    const sau = await assignment.dataRows.count();
+    const sau = await assignment.totalRowCount();
     expect(sau).toBe(truoc);
   });
 
@@ -71,7 +71,7 @@ test.describe('Material Inspection Assignment - Import', () => {
       'Material *': IMPORT_ASSIGNMENT_EXCEL_DATA.material,
     });
 
-    const truoc = await assignment.dataRows.count();
+    const truoc = await assignment.totalRowCount();
     await assignment.selectImportFile(fileBatBuoc);
     await assignment.confirmImport();
 
@@ -79,7 +79,7 @@ test.describe('Material Inspection Assignment - Import', () => {
     await assignment.closeImportDialog();
 
     await assignment.goto();
-    const sau = await assignment.dataRows.count();
+    const sau = await assignment.totalRowCount();
     expect(sau).toBe(truoc);
   });
 

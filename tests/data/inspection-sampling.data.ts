@@ -6,12 +6,15 @@ export const SAMPLING_TYPES: readonly SamplingType[] = [
   '100% Inspection',
 ];
 
-export const IMPORT_SAMPLING_DATA = {
-  code: 'ATIMP01',
-  shortText: 'Imported by automated test',
-  type: 'FIXED',
-  sampleSize: 5,
-} as const;
+export function generateImportSamplingData() {
+  const suffix = Math.floor(Math.random() * 100000).toString().padStart(5, '0');
+  return {
+    code: `AI${suffix}`,
+    shortText: `Imported by automated test ${suffix}`,
+    type: 'FIXED' as const,
+    sampleSize: 5,
+  };
+}
 
 export function generateSamplingData(): SamplingData {
   const so = Math.floor(Math.random() * 100000).toString().padStart(5, '0');

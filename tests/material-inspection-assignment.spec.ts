@@ -38,7 +38,10 @@ test.describe('Material Inspection Assignment - CRUD', () => {
   });
 
   test('creates an assignment', async () => {
-    const data = MATERIAL_INSPECTION_ASSIGNMENT_DATA;
+    const data = {
+      ...MATERIAL_INSPECTION_ASSIGNMENT_DATA,
+      material: await assignment.randomMaterial(MATERIAL_INSPECTION_ASSIGNMENT_DATA.inspectionType),
+    };
     try {
       await assignment.deleteIfExists(data);
       await assignment.create(data);

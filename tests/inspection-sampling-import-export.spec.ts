@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import * as fs from 'fs';
 import { InspectionSamplingPage } from '../pages/inspection-sampling.page';
-import { IMPORT_SAMPLING_DATA } from './data/inspection-sampling.data';
+import { generateImportSamplingData } from './data/inspection-sampling.data';
 import {
   FILE_SAI,
   buildExcelFromTemplate,
@@ -68,16 +68,17 @@ test.describe('Inspection Sampling - Export / Import', () => {
   });
 
   test('TC19 - Import: file hợp lệ thì dữ liệu xuất hiện trong danh sách', async ({}, testInfo) => {
+    const importData = generateImportSamplingData();
     const templateDownload = await sampling.downloadImportTemplate();
     const templatePath = testInfo.outputPath('sampling-import-template.xlsx');
     await templateDownload.saveAs(templatePath);
 
     const fileHopLe = testInfo.outputPath('sampling-import.xlsx');
     await buildExcelFromTemplate(templatePath, fileHopLe, {
-      'Sampling Procedure *': IMPORT_SAMPLING_DATA.code,
-      'Short Text': IMPORT_SAMPLING_DATA.shortText,
-      'Sampling Type': IMPORT_SAMPLING_DATA.type,
-      'Sample Size': IMPORT_SAMPLING_DATA.sampleSize,
+      'Sampling Procedure *': importData.code,
+      'Short Text': importData.shortText,
+      'Sampling Type': importData.type,
+      'Sample Size': importData.sampleSize,
     });
 
     try {
@@ -85,9 +86,9 @@ test.describe('Inspection Sampling - Export / Import', () => {
       await sampling.confirmImport();
 
       await sampling.goto();
-      await expect(sampling.rowOf(IMPORT_SAMPLING_DATA.code)).toBeVisible();
+      await expect(sampling.rowOf(importData.code)).toBeVisible();
     } finally {
-      await sampling.deleteIfExists(IMPORT_SAMPLING_DATA.code); // dọn dữ liệu đã import
+      await sampling.deleteIfExists(importData.code); // dọn dữ liệu đã import
     }
   });
 });

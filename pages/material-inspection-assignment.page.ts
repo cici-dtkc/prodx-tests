@@ -64,6 +64,10 @@ export class MaterialInspectionAssignmentPage {
   get dataRows(): Locator {
     return this.page.locator('tbody tr');
   }
+
+  get totalRowCountLabel(): Locator {
+    return this.page.getByText(/\d+ of \d+ row\(s\) selected/i);
+  }
   get importButton(): Locator {
     return this.page.getByRole('button', { name: 'Import', exact: true });
   }
@@ -83,6 +87,15 @@ export class MaterialInspectionAssignmentPage {
     await expect(this.heading).toBeVisible();
   }
 
+  async totalRowCount(): Promise<number> {
+    const text = await this.totalRowCountLabel.innerText();
+    const match = text.match(/\d+ of (\d+) row\(s\) selected/i);
+    if (!match) {
+      throw new Error(`Unable to read total assignment row count from "${text}".`);
+    }
+    return Number(match[1]);
+  }
+
   async selectOption(field: Locator, value: string) {
     await field.click();
     const escapedValue = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -98,6 +111,24 @@ export class MaterialInspectionAssignmentPage {
     await expect(this.page.getByRole('heading', { name: /Step 2 of 2/ })).toBeVisible();
     await this.fillFrequency(data);
     await this.save();
+  }
+
+  async randomMaterial(inspectionType: InspectionType): Promise<string> {
+    await this.createButton.click();
+    await expect(this.page.getByRole('heading', { name: /Step 1 of 2/ })).toBeVisible();
+    await this.selectOption(this.inspectionTypeField, inspectionType);
+    await this.materialField.click();
+
+    const materials = (await this.page.getByRole('option').allTextContents())
+      .map((material) => material.trim())
+      .filter((material) => material && !/^select product|no options available$/i.test(material));
+    if (materials.length === 0) {
+      throw new Error(`No materials are available for inspection type "${inspectionType}".`);
+    }
+
+    await this.page.keyboard.press('Escape');
+    await this.goto();
+    return materials[Math.floor(Math.random() * materials.length)].split(' - ', 1)[0];
   }
 
   async fillFrequency(data: Pick<MaterialInspectionAssignmentData, 'frequency' | 'unit'>) {
